@@ -700,14 +700,15 @@
         this.vx = 0;
         this.vy = 0;
         this.radius = 12;
-        this.gravity = 1.8;
+        this.gravity = 1.5;
         this.landed = false;
         this.landedSlot = null;
         this.trail = [];
         this.processed = false;
         this.rotation = 0;
         this.rotationSpeed = 0;
-        this.lastPegHit = null;
+        this.pegHitCount = 0;
+        this.collidedPegs = new Set();
       }
 
       update() {
@@ -723,65 +724,81 @@
         this.x += this.vx;
         this.y += this.vy;
         
+        // Dampen horizontal velocity slightly between pegs
+        this.vx *= 0.99;
+        
         // Update rotation
         this.rotation += this.rotationSpeed;
         this.rotationSpeed *= 0.95;
 
         // Check peg collisions
-        pegs.forEach(peg => {
+        for (const peg of pegs) {
+          // Skip if we already collided with this peg
+          if (this.collidedPegs.has(peg)) continue;
+          
           const dx = this.x - peg.x;
           const dy = this.y - peg.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
           const minDist = this.radius + peg.radius;
 
-          if (distance < minDist && distance > 0 && this.lastPegHit !== peg) {
-            // Normalize collision vector
-            const normalX = dx / distance;
-            const normalY = dy / distance;
+          if (distance < minDist && distance > 0) {
+            // Mark peg as collided
+            this.collidedPegs.add(peg);
+            this.pegHitCount++;
             
             // Separate ball from peg
+            const normalX = dx / distance;
+            const normalY = dy / distance;
             const overlap = minDist - distance;
-            this.x += normalX * overlap * 1.1;
-            this.y += normalY * overlap * 1.1;
+            this.x += normalX * overlap * 1.5;
+            this.y += normalY * overlap * 1.5;
             
-            // Mark this peg as hit to prevent multiple collisions
-            this.lastPegHit = peg;
+            // THE KEY TO CORRECT DISTRIBUTION:
+            // Each peg hit is a Bernoulli trial - 50% left, 50% right
+            // The horizontal offset must be consistent to match peg spacing
+            const pegSpacing = 42; // matches peg generation spacing
+            const horizontalShift = pegSpacing / 2; // half peg spacing per bounce
             
-            // Simple bounce: just reverse vertical and set a fixed horizontal based on 50/50
-            this.vy = Math.abs(this.vy) * 0.3;
+            // Pure 50/50 random choice
+            const goRight = Math.random() < 0.5;
             
-            // THE KEY: Pure 50/50 random direction with FIXED magnitude
-            // This ensures Pascal's triangle distribution
-            const randomDirection = Math.random() < 0.5 ? -1 : 1;
-            this.vx = randomDirection * 2.5;
+            // Set position offset and velocity to guide ball to next row
+            if (goRight) {
+              this.vx = 3.5;
+              this.rotationSpeed = 0.15;
+            } else {
+              this.vx = -3.5;
+              this.rotationSpeed = -0.15;
+            }
             
-            // Update rotation based on direction
-            this.rotationSpeed = randomDirection * 0.2;
+            // Bounce upward slightly
+            this.vy = Math.abs(this.vy) * 0.2;
 
             peg.hit = true;
             peg.hitTime = Date.now();
+            
+            // Only process one peg collision per frame
+            break;
           }
-        });
+        }
         
-        // Clear last peg hit if we've moved far enough away
-        if (this.lastPegHit) {
-          const dx = this.x - this.lastPegHit.x;
-          const dy = this.y - this.lastPegHit.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist > this.radius + this.lastPegHit.radius + 5) {
-            this.lastPegHit = null;
+        // Clean up old collided pegs that are far away
+        for (const peg of this.collidedPegs) {
+          const dy = this.y - peg.y;
+          if (dy > 30) {
+            this.collidedPegs.delete(peg);
           }
         }
 
-        // Wall collisions - just clamp position
+        // Wall collisions
         const padding = 40;
         if (this.x < padding + this.radius) {
           this.x = padding + this.radius;
-          this.vx = Math.abs(this.vx) * 0.5;
+          this.vx = Math.abs(this.vx) * 0.3;
         }
         if (this.x > boardWidth - padding - this.radius) {
           this.x = boardWidth - padding - this.radius;
-          this.vx = -Math.abs(this.vx) * 0.5;
+          this.vx = -Math.abs(this.vx) * 0.3;
         }
 
         // Check if ball reached bottom
