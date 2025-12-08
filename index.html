@@ -660,6 +660,15 @@
 
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    
+    // Enable smoother rendering
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    
+    // Use requestAnimationFrame with delta time for smooth animation
+    let lastTime = 0;
+    const targetFPS = 60;
+    const frameTime = 1000 / targetFPS;
 
     // Load lemon image
     const lemonImg = new Image();
@@ -688,32 +697,34 @@
         this.id = id;
         this.x = x;
         this.y = y;
-        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vx = 0;
         this.vy = 0;
         this.radius = 12;
-        this.gravity = 0.18;
-        this.friction = 0.7;
-        this.bounciness = 0.45;
+        this.gravity = 0.12;
+        this.friction = 0.6;
+        this.bounciness = 0.35;
         this.landed = false;
         this.landedSlot = null;
         this.trail = [];
         this.processed = false;
         this.rotation = 0;
-        this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+        this.rotationSpeed = 0;
       }
 
       update() {
         if (this.landed) return;
 
         this.trail.push({ x: this.x, y: this.y });
-        if (this.trail.length > 10) this.trail.shift();
+        if (this.trail.length > 12) this.trail.shift();
 
+        // Apply gravity
         this.vy += this.gravity;
-        this.vy = Math.min(this.vy, 5);
-
+        
+        // Apply velocity with smooth interpolation
         this.x += this.vx;
         this.y += this.vy;
         
+        // Update rotation based on horizontal velocity
         this.rotation += this.rotationSpeed;
 
         // Check peg collisions
@@ -723,35 +734,55 @@
           const distance = Math.sqrt(dx * dx + dy * dy);
           const minDist = this.radius + peg.radius;
 
-          if (distance < minDist) {
-            const angle = Math.atan2(dy, dx);
-            this.x = peg.x + Math.cos(angle) * minDist;
-            this.y = peg.y + Math.sin(angle) * minDist;
-
+          if (distance < minDist && distance > 0) {
+            // Normalize collision vector
             const normalX = dx / distance;
             const normalY = dy / distance;
-            const dotProduct = this.vx * normalX + this.vy * normalY;
+            
+            // Separate ball from peg
+            const overlap = minDist - distance;
+            this.x += normalX * overlap;
+            this.y += normalY * overlap;
 
-            this.vx = (this.vx - 2 * dotProduct * normalX) * this.friction;
-            this.vy = (this.vy - 2 * dotProduct * normalY) * this.bounciness;
-
-            this.vx += (Math.random() - 0.5) * 1.4;
-            this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+            // Calculate relative velocity along collision normal
+            const relativeVelocity = this.vx * normalX + this.vy * normalY;
+            
+            // Only resolve if moving towards peg
+            if (relativeVelocity < 0) {
+              // Reflect velocity with bounciness
+              this.vx -= (1 + this.bounciness) * relativeVelocity * normalX;
+              this.vy -= (1 + this.bounciness) * relativeVelocity * normalY;
+              
+              // Apply friction to tangential velocity
+              const tangentX = -normalY;
+              const tangentY = normalX;
+              const tangentVelocity = this.vx * tangentX + this.vy * tangentY;
+              this.vx -= tangentVelocity * tangentX * (1 - this.friction);
+              this.vy -= tangentVelocity * tangentY * (1 - this.friction);
+              
+              // Add small random deflection (50/50 left or right bias)
+              // This is the key to correct probability distribution
+              const randomDirection = Math.random() < 0.5 ? -1 : 1;
+              this.vx += randomDirection * 0.8;
+              
+              // Update rotation based on collision
+              this.rotationSpeed = this.vx * 0.05;
+            }
 
             peg.hit = true;
             peg.hitTime = Date.now();
           }
         });
 
-        // Wall collisions
+        // Wall collisions with damping
         const padding = 40;
         if (this.x < padding + this.radius) {
           this.x = padding + this.radius;
-          this.vx *= -this.friction;
+          this.vx = Math.abs(this.vx) * this.friction;
         }
         if (this.x > boardWidth - padding - this.radius) {
           this.x = boardWidth - padding - this.radius;
-          this.vx *= -this.friction;
+          this.vx = -Math.abs(this.vx) * this.friction;
         }
 
         // Check if ball reached bottom
@@ -805,8 +836,26 @@
       }
     }
 
-    // Animation loop
-    function animate() {
+    // Animation loop with smooth rendering
+    function animate(currentTime) {
+      requestAnimationFrame(animate);
+      
+      // Calculate delta time for consistent physics
+      const deltaTime = currentTime - lastTime;
+      
+      // Run physics updates at fixed timestep
+      if (deltaTime >= frameTime) {
+        lastTime = currentTime - (deltaTime % frameTime);
+        
+        // Update all balls
+        balls.forEach(ball => ball.update());
+      }
+      
+      // Always render for smooth visuals
+      render();
+    }
+    
+    function render() {
       ctx.clearRect(0, 0, boardWidth, boardHeight);
 
       // Background
@@ -906,8 +955,6 @@
       let ballsToRemove = [];
       
       balls.forEach(ball => {
-        ball.update();
-        
         if (ball.landed && ball.landedSlot !== null && !ball.processed) {
           ball.processed = true;
           const multiplier = multipliers[ball.landedSlot];
@@ -928,19 +975,24 @@
         }
       });
 
-      // Draw active balls as lemons
+      // Draw active balls as lemons with smooth trails
       balls.forEach(ball => {
         if (ball.landed) return;
         
-        // Draw trail
-        ball.trail.forEach((pos, i) => {
-          const alpha = (i / ball.trail.length) * 0.3;
-          const size = (i / ball.trail.length) * ball.radius * 0.8;
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(253, 224, 71, ${alpha})`;
-          ctx.fill();
-        });
+        // Draw smooth gradient trail
+        if (ball.trail.length > 1) {
+          for (let i = 1; i < ball.trail.length; i++) {
+            const prev = ball.trail[i - 1];
+            const curr = ball.trail[i];
+            const alpha = (i / ball.trail.length) * 0.35;
+            const size = (i / ball.trail.length) * ball.radius * 0.7;
+            
+            ctx.beginPath();
+            ctx.arc(curr.x, curr.y, size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(253, 224, 71, ${alpha})`;
+            ctx.fill();
+          }
+        }
 
         // Draw lemon
         ctx.save();
@@ -985,8 +1037,6 @@
           delete slotHits[key];
         }
       });
-
-      requestAnimationFrame(animate);
     }
 
     // UI Update functions
@@ -1048,9 +1098,11 @@
       balance -= betAmount;
       updateBalance();
       
+      // Drop from exact center with no initial horizontal velocity
+      // The 50/50 peg bounces will create the correct distribution
       const newBall = new Ball(
-        boardWidth / 2 + (Math.random() - 0.5) * 20,
-        20,
+        boardWidth / 2,
+        25,
         ballIdCounter++
       );
       balls.push(newBall);
@@ -1215,7 +1267,7 @@
     // Initialize
     generatePegs();
     updateBalance();
-    animate();
+    requestAnimationFrame(animate);
   </script>
 </body>
 </html>
