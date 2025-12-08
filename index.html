@@ -700,7 +700,7 @@
         this.vx = 0;
         this.vy = 0;
         this.radius = 12;
-        this.gravity = 0.12;
+        this.gravity = 0.36;
         this.friction = 0.6;
         this.bounciness = 0.35;
         this.landed = false;
@@ -715,7 +715,7 @@
         if (this.landed) return;
 
         this.trail.push({ x: this.x, y: this.y });
-        if (this.trail.length > 12) this.trail.shift();
+        if (this.trail.length > 8) this.trail.shift();
 
         // Apply gravity
         this.vy += this.gravity;
@@ -763,10 +763,10 @@
               // Add small random deflection (50/50 left or right bias)
               // This is the key to correct probability distribution
               const randomDirection = Math.random() < 0.5 ? -1 : 1;
-              this.vx += randomDirection * 0.8;
+              this.vx += randomDirection * 1.5;
               
               // Update rotation based on collision
-              this.rotationSpeed = this.vx * 0.05;
+              this.rotationSpeed = this.vx * 0.08;
             }
 
             peg.hit = true;
