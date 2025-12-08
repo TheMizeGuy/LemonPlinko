@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lemon Plinko</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0e1a 0%, #151c2c 50%, #0d1320 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 24px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+      border-radius: 16px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+    }
+
+    .left-panel {
+      width: 280px;
+    }
+
+    .right-panel {
+      width: 220px;
+      max-height: 600px;
+      overflow: hidden;
+    }
+
+    .balance-display {
+      background: linear-gradient(135deg, rgba(250, 204, 21, 0.15) 0%, rgba(234, 179, 8, 0.1) 100%);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(250, 204, 21, 0.2);
+    }
+
+    .balance-label {
+      font-size: 11px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .balance-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #facc15;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label {
+      font-size: 12px;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .bet-input {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 12px;
+      color: #fff;
+      font-size: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      outline: none;
+    }
+
+    .bet-input:focus {
+      border-color: rgba(250, 204, 21, 0.5);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .btn-small {
+      flex: 1;
+      padding: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: #9ca3af;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-small:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .risk-btn {
+      flex: 1;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      color: #9ca3af;
+      font-size: 13px;
+      cursor: pointer;
+      text-transform: capitalize;
+      transition: all 0.2s;
+    }
+
+    .risk-btn.active-low {
+      background: rgba(34, 197, 94, 0.3);
+      border-color: #22c55e;
+      color: #22c55e;
+      font-weight: 600;
+    }
+
+    .risk-btn.active-medium {
+      background: rgba(251, 191, 36, 0.3);
+      border-color: #fbbf24;
+      color: #fbbf24;
+      font-weight: 600;
+    }
+
+    .risk-btn.active-high {
+      background: rgba(239, 68, 68, 0.3);
+      border-color: #ef4444;
+      color: #ef4444;
+      font-weight: 600;
+    }
+
+    .row-slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      appearance: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .row-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      background: #facc15;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(250, 204, 21, 0.5);
+    }
+
+    .row-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      background: #facc15;
+      border-radius: 50%;
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 2px 10px rgba(250, 204, 21, 0.5);
+    }
+
+    .btn-drop {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+      border: none;
+      border-radius: 12px;
+      color: #000;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(250, 204, 21, 0.4);
+      margin-bottom: 10px;
+    }
+
+    .btn-drop:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 25px rgba(250, 204, 21, 0.5);
+    }
+
+    .btn-drop:disabled {
+      background: rgba(255, 255, 255, 0.1);
+      color: #6b7280;
+      box-shadow: none;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-auto {
+      width: 100%;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-auto.active {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      border-color: #ef4444;
+    }
+
+    .result-box {
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .result-box.win {
+      background: rgba(250, 204, 21, 0.15);
+      border: 1px solid rgba(250, 204, 21, 0.3);
+    }
+
+    .result-box.loss {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .result-label {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-bottom: 4px;
+    }
+
+    .result-value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .result-value.win {
+      color: #facc15;
+    }
+
+    .result-value.loss {
+      color: #ef4444;
+    }
+
+    .profit-box {
+      margin-top: 12px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .game-board {
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%);
+      border-radius: 20px;
+      padding: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .game-title {
+      font-size: 24px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #facc15 0%, #eab308 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .game-badges {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-low {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .badge-medium {
+      background: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+    }
+
+    .badge-high {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .badge-rows {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    #gameCanvas {
+      border-radius: 12px;
+      display: block;
+    }
+
+    .history-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 520px;
+      overflow-y: auto;
+    }
+
+    .history-empty {
+      color: #6b7280;
+      font-size: 13px;
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .history-mult {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .history-profit {
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .history-profit.win {
+      color: #facc15;
+    }
+
+    .history-profit.loss {
+      color: #ef4444;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .lemon-icon {
+      font-size: 20px;
+    }
+
+    .section {
+      margin-bottom: 16px;
+    }
+
+    .row-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+
+    @media (max-width: 1100px) {
+      body {
+        flex-direction: column;
+        align-items: center;
+      }
+      
+      .left-panel, .right-panel {
+        width: 100%;
+        max-width: 400px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Left Panel - Controls -->
+  <div class="panel left-panel">
+    <!-- Balance Display -->
+    <div class="balance-display">
+      <div class="balance-label">
+        <span class="lemon-icon">🍋</span> Balance
+      </div>
+      <div class="balance-value">
+        <span id="balanceValue">1000.00</span>
+        <span style="font-size: 16px; font-weight: 500;">Lemons</span>
+      </div>
+    </div>
+
+    <!-- Bet Amount -->
+    <div class="section">
+      <label class="section-label">Bet Amount (Lemons)</label>
+      <input type="number" id="betInput" class="bet-input" value="10" min="1">
+      <div class="btn-group">
+        <button class="btn-small" onclick="adjustBet(0.5)">½x</button>
+        <button class="btn-small" onclick="adjustBet(2)">2x</button>
+        <button class="btn-small" onclick="setBetMax()">MAX</button>
+      </div>
+    </div>
+
+    <!-- Risk Level -->
+    <div class="section">
+      <label class="section-label">Risk</label>
+      <div class="btn-group">
+        <button class="risk-btn" id="risk-low" onclick="setRisk('low')">Low</button>
+        <button class="risk-btn active-medium" id="risk-medium" onclick="setRisk('medium')">Medium</button>
+        <button class="risk-btn" id="risk-high" onclick="setRisk('high')">High</button>
+      </div>
+    </div>
+
+    <!-- Rows -->
+    <div class="section">
+      <label class="section-label">Rows: <span id="rowsValue">12</span></label>
+      <input type="range" id="rowsSlider" class="row-slider" min="8" max="16" value="12" oninput="setRows(this.value)">
+      <div class="row-labels">
+        <span>8</span>
+        <span>16</span>
+      </div>
+    </div>
+
+    <!-- Drop Button -->
+    <button class="btn-drop" id="dropBtn" onclick="dropBall()">
+      🍋 Drop Lemon
+    </button>
+
+    <!-- Auto Play Button -->
+    <button class="btn-auto" id="autoBtn" onclick="toggleAutoPlay()">
+      ▶ Auto Play
+    </button>
+
+    <!-- Last Win -->
+    <div class="result-box win" id="lastResult" style="display: none;">
+      <div class="result-label">Last Result</div>
+      <div class="result-value win" id="lastResultValue"></div>
+    </div>
+
+    <!-- Total Profit -->
+    <div class="profit-box">
+      <div class="result-label">Session Profit</div>
+      <div class="result-value win" id="profitValue" style="font-size: 18px;">+0.00 🍋</div>
+    </div>
+  </div>
+
+  <!-- Center - Game Board -->
+  <div class="game-board">
+    <div class="game-header">
+      <div class="game-title">
+        <span>🍋</span> LEMON PLINKO
+      </div>
+      <div class="game-badges">
+        <span class="badge badge-medium" id="riskBadge">MEDIUM RISK</span>
+        <span class="badge badge-rows" id="rowsBadge">12 Rows</span>
+      </div>
+    </div>
+    <canvas id="gameCanvas" width="600" height="500"></canvas>
+  </div>
+
+  <!-- Right Panel - History -->
+  <div class="panel right-panel">
+    <div class="history-title">
+      <span>📊</span> History
+    </div>
+    <div class="history-list" id="historyList">
+      <div class="history-empty">No drops yet</div>
+    </div>
+  </div>
+
+  <script>
+    // Multiplier tables matching Stake's payout structure
+    const MULTIPLIERS = {
+      8: {
+        low: [5.6, 2.1, 1.1, 1, 0.5, 1, 1.1, 2.1, 5.6],
+        medium: [13, 3, 1.3, 0.7, 0.4, 0.7, 1.3, 3, 13],
+        high: [29, 4, 1.5, 0.3, 0.2, 0.3, 1.5, 4, 29]
+      },
+      9: {
+        low: [5.6, 2, 1.6, 1, 0.7, 0.7, 1, 1.6, 2, 5.6],
+        medium: [18, 4, 1.7, 0.9, 0.5, 0.5, 0.9, 1.7, 4, 18],
+        high: [43, 7, 2, 0.6, 0.2, 0.2, 0.6, 2, 7, 43]
+      },
+      10: {
+        low: [8.9, 3, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 3, 8.9],
+        medium: [22, 5, 2, 1.4, 0.6, 0.4, 0.6, 1.4, 2, 5, 22],
+        high: [76, 10, 3, 0.9, 0.3, 0.2, 0.3, 0.9, 3, 10, 76]
+      },
+      11: {
+        low: [8.4, 3, 1.9, 1.3, 1, 0.7, 0.7, 1, 1.3, 1.9, 3, 8.4],
+        medium: [24, 6, 3, 1.8, 0.7, 0.5, 0.5, 0.7, 1.8, 3, 6, 24],
+        high: [120, 14, 5.2, 1.4, 0.4, 0.2, 0.2, 0.4, 1.4, 5.2, 14, 120]
+      },
+      12: {
+        low: [10, 3, 1.6, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 1.6, 3, 10],
+        medium: [33, 11, 4, 2, 1.1, 0.6, 0.3, 0.6, 1.1, 2, 4, 11, 33],
+        high: [170, 24, 8.1, 2, 0.7, 0.2, 0.2, 0.2, 0.7, 2, 8.1, 24, 170]
+      },
+      13: {
+        low: [8.1, 4, 3, 1.9, 1.2, 0.9, 0.7, 0.7, 0.9, 1.2, 1.9, 3, 4, 8.1],
+        medium: [43, 13, 6, 3, 1.3, 0.7, 0.4, 0.4, 0.7, 1.3, 3, 6, 13, 43],
+        high: [260, 37, 11, 4, 1, 0.2, 0.2, 0.2, 0.2, 1, 4, 11, 37, 260]
+      },
+      14: {
+        low: [7.1, 4, 1.9, 1.4, 1.3, 1.1, 1, 0.5, 1, 1.1, 1.3, 1.4, 1.9, 4, 7.1],
+        medium: [58, 15, 7, 4, 1.9, 1, 0.5, 0.2, 0.5, 1, 1.9, 4, 7, 15, 58],
+        high: [420, 56, 18, 5, 1.9, 0.3, 0.2, 0.2, 0.2, 0.3, 1.9, 5, 18, 56, 420]
+      },
+      15: {
+        low: [15, 8, 3, 2, 1.5, 1.1, 1, 0.7, 0.7, 1, 1.1, 1.5, 2, 3, 8, 15],
+        medium: [88, 18, 11, 5, 3, 1.3, 0.5, 0.3, 0.3, 0.5, 1.3, 3, 5, 11, 18, 88],
+        high: [620, 83, 27, 8, 3, 0.5, 0.2, 0.2, 0.2, 0.2, 0.5, 3, 8, 27, 83, 620]
+      },
+      16: {
+        low: [16, 9, 2, 1.4, 1.4, 1.2, 1.1, 1, 0.5, 1, 1.1, 1.2, 1.4, 1.4, 2, 9, 16],
+        medium: [110, 41, 10, 5, 3, 1.5, 1, 0.5, 0.3, 0.5, 1, 1.5, 3, 5, 10, 41, 110],
+        high: [1000, 130, 26, 9, 4, 2, 0.2, 0.2, 0.2, 0.2, 0.2, 2, 4, 9, 26, 130, 1000]
+      }
+    };
+
+    // Game state
+    let balance = 1000;
+    let betAmount = 10;
+    let rows = 12;
+    let risk = 'medium';
+    let balls = [];
+    let pegs = [];
+    let slotHits = {};
+    let isAutoPlaying = false;
+    let autoPlayInterval = null;
+    let totalProfit = 0;
+    let history = [];
+    let ballIdCounter = 0;
+
+    const boardWidth = 600;
+    const boardHeight = 500;
+    const slotWidth = 35;
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Load lemon image
+    const lemonImg = new Image();
+    let lemonLoaded = false;
+    lemonImg.onload = () => { lemonLoaded = true; };
+    lemonImg.src = 'data:image/svg+xml,' + encodeURIComponent(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+        <ellipse cx="50" cy="50" rx="40" ry="35" fill="#fde047"/>
+        <ellipse cx="50" cy="50" rx="40" ry="35" fill="url(#lemonGrad)"/>
+        <ellipse cx="50" cy="48" rx="35" ry="30" fill="#fef08a" opacity="0.5"/>
+        <ellipse cx="40" cy="40" rx="12" ry="8" fill="#fffde7" opacity="0.6"/>
+        <path d="M85 50 Q95 50 92 45 Q89 40 85 50" fill="#a3e635"/>
+        <path d="M15 50 Q5 50 8 45 Q11 40 15 50" fill="#a3e635"/>
+        <defs>
+          <radialGradient id="lemonGrad" cx="30%" cy="30%">
+            <stop offset="0%" stop-color="#fef9c3"/>
+            <stop offset="100%" stop-color="#facc15"/>
+          </radialGradient>
+        </defs>
+      </svg>
+    `);
+
+    // Ball class
+    class Ball {
+      constructor(x, y, id) {
+        this.id = id;
+        this.x = x;
+        this.y = y;
+        this.vx = (Math.random() - 0.5) * 0.3;
+        this.vy = 0;
+        this.radius = 10;
+        this.gravity = 0.15;
+        this.friction = 0.7;
+        this.bounciness = 0.45;
+        this.landed = false;
+        this.landedSlot = null;
+        this.trail = [];
+        this.processed = false;
+        this.rotation = 0;
+        this.rotationSpeed = (Math.random() - 0.5) * 0.2;
+      }
+
+      update() {
+        if (this.landed) return;
+
+        this.trail.push({ x: this.x, y: this.y });
+        if (this.trail.length > 10) this.trail.shift();
+
+        this.vy += this.gravity;
+        this.vy = Math.min(this.vy, 4);
+
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        this.rotation += this.rotationSpeed;
+
+        // Check peg collisions
+        pegs.forEach(peg => {
+          const dx = this.x - peg.x;
+          const dy = this.y - peg.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          const minDist = this.radius + peg.radius;
+
+          if (distance < minDist) {
+            const angle = Math.atan2(dy, dx);
+            this.x = peg.x + Math.cos(angle) * minDist;
+            this.y = peg.y + Math.sin(angle) * minDist;
+
+            const normalX = dx / distance;
+            const normalY = dy / distance;
+            const dotProduct = this.vx * normalX + this.vy * normalY;
+
+            this.vx = (this.vx - 2 * dotProduct * normalX) * this.friction;
+            this.vy = (this.vy - 2 * dotProduct * normalY) * this.bounciness;
+
+            this.vx += (Math.random() - 0.5) * 1.2;
+            this.rotationSpeed = (Math.random() - 0.5) * 0.3;
+
+            peg.hit = true;
+            peg.hitTime = Date.now();
+          }
+        });
+
+        // Wall collisions
+        const padding = 30;
+        if (this.x < padding + this.radius) {
+          this.x = padding + this.radius;
+          this.vx *= -this.friction;
+        }
+        if (this.x > boardWidth - padding - this.radius) {
+          this.x = boardWidth - padding - this.radius;
+          this.vx *= -this.friction;
+        }
+
+        // Check if ball reached bottom
+        const bottomY = boardHeight - 60;
+        if (this.y >= bottomY) {
+          this.y = bottomY;
+          this.landed = true;
+          
+          const slotsCount = rows + 1;
+          const startX = (boardWidth - slotsCount * slotWidth) / 2;
+          const slotIndex = Math.floor((this.x - startX) / slotWidth);
+          this.landedSlot = Math.max(0, Math.min(slotsCount - 1, slotIndex));
+        }
+      }
+    }
+
+    // Color schemes for multipliers
+    function getMultiplierColor(multiplier) {
+      if (multiplier >= 100) return { bg: '#ff003c', text: '#fff', glow: 'rgba(255, 0, 60, 0.8)' };
+      if (multiplier >= 20) return { bg: '#ff2d55', text: '#fff', glow: 'rgba(255, 45, 85, 0.7)' };
+      if (multiplier >= 5) return { bg: '#ff6b35', text: '#fff', glow: 'rgba(255, 107, 53, 0.6)' };
+      if (multiplier >= 2) return { bg: '#ffb800', text: '#000', glow: 'rgba(255, 184, 0, 0.6)' };
+      if (multiplier >= 1) return { bg: '#4ade80', text: '#000', glow: 'rgba(74, 222, 128, 0.5)' };
+      if (multiplier >= 0.5) return { bg: '#22d3ee', text: '#000', glow: 'rgba(34, 211, 238, 0.5)' };
+      return { bg: '#818cf8', text: '#fff', glow: 'rgba(129, 140, 248, 0.5)' };
+    }
+
+    // Generate pegs
+    function generatePegs() {
+      pegs = [];
+      const pegRadius = 4;
+      const startY = 60;
+      const endY = boardHeight - 80;
+      const rowSpacing = (endY - startY) / rows;
+
+      for (let row = 0; row < rows; row++) {
+        const pegsInRow = row + 3;
+        const y = startY + row * rowSpacing;
+        const totalWidth = (pegsInRow - 1) * 35;
+        const startX = (boardWidth - totalWidth) / 2;
+
+        for (let col = 0; col < pegsInRow; col++) {
+          pegs.push({
+            x: startX + col * 35,
+            y: y,
+            radius: pegRadius,
+            hit: false,
+            hitTime: 0
+          });
+        }
+      }
+    }
+
+    // Animation loop
+    function animate() {
+      ctx.clearRect(0, 0, boardWidth, boardHeight);
+
+      // Background
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, boardHeight);
+      bgGradient.addColorStop(0, '#0c1222');
+      bgGradient.addColorStop(1, '#1a1f35');
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, boardWidth, boardHeight);
+
+      // Grid pattern
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < boardWidth; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(i, 0);
+        ctx.lineTo(i, boardHeight);
+        ctx.stroke();
+      }
+      for (let i = 0; i < boardHeight; i += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, i);
+        ctx.lineTo(boardWidth, i);
+        ctx.stroke();
+      }
+
+      // Draw pegs
+      pegs.forEach(peg => {
+        const timeSinceHit = Date.now() - peg.hitTime;
+        const isRecentlyHit = timeSinceHit < 200;
+        
+        ctx.beginPath();
+        ctx.arc(peg.x, peg.y, peg.radius, 0, Math.PI * 2);
+        
+        if (isRecentlyHit) {
+          const intensity = 1 - timeSinceHit / 200;
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.4 + intensity * 0.6})`;
+          ctx.shadowColor = '#fff';
+          ctx.shadowBlur = 15 * intensity;
+        } else {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.shadowBlur = 0;
+        }
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Draw multiplier slots
+      const multipliers = MULTIPLIERS[rows][risk];
+      const slotsCount = rows + 1;
+      const totalSlotsWidth = slotsCount * slotWidth;
+      const slotsStartX = (boardWidth - totalSlotsWidth) / 2;
+      const slotY = boardHeight - 45;
+
+      multipliers.forEach((mult, index) => {
+        const x = slotsStartX + index * slotWidth;
+        const colors = getMultiplierColor(mult);
+        
+        const hitTime = slotHits[index];
+        const timeSinceSlotHit = hitTime ? Date.now() - hitTime : Infinity;
+        const isSlotGlowing = timeSinceSlotHit < 600;
+        const glowIntensity = isSlotGlowing ? 1 - (timeSinceSlotHit / 600) : 0;
+
+        if (isSlotGlowing) {
+          ctx.shadowColor = colors.glow;
+          ctx.shadowBlur = 25 + glowIntensity * 20;
+          
+          ctx.fillStyle = colors.bg;
+          ctx.beginPath();
+          const expandAmount = glowIntensity * 3;
+          ctx.roundRect(x + 2 - expandAmount, slotY - expandAmount, slotWidth - 4 + expandAmount * 2, 30 + expandAmount * 2, 4);
+          ctx.fill();
+          
+          ctx.shadowBlur = 0;
+          
+          ctx.fillStyle = `rgba(255, 255, 255, ${glowIntensity * 0.4})`;
+          ctx.beginPath();
+          ctx.roundRect(x + 2, slotY, slotWidth - 4, 30, 4);
+          ctx.fill();
+        } else {
+          ctx.fillStyle = colors.bg;
+          ctx.shadowColor = colors.glow;
+          ctx.shadowBlur = 8;
+          ctx.beginPath();
+          ctx.roundRect(x + 2, slotY, slotWidth - 4, 30, 4);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.fillStyle = isSlotGlowing ? '#fff' : colors.text;
+        ctx.font = `bold ${isSlotGlowing ? 11 : 10}px "JetBrains Mono", monospace`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${mult}x`, x + slotWidth / 2, slotY + 15);
+      });
+
+      // Update and draw balls
+      let ballsToRemove = [];
+      
+      balls.forEach(ball => {
+        ball.update();
+        
+        if (ball.landed && ball.landedSlot !== null && !ball.processed) {
+          ball.processed = true;
+          const multiplier = multipliers[ball.landedSlot];
+          const winAmount = betAmount * multiplier;
+          const profit = winAmount - betAmount;
+          
+          slotHits[ball.landedSlot] = Date.now();
+          
+          balance += winAmount;
+          totalProfit += profit;
+          
+          updateBalance();
+          updateLastResult(multiplier, winAmount, profit);
+          updateProfit();
+          addToHistory(ball.id, multiplier, profit);
+          
+          ballsToRemove.push(ball.id);
+        }
+      });
+
+      // Draw active balls as lemons
+      balls.forEach(ball => {
+        if (ball.landed) return;
+        
+        // Draw trail
+        ball.trail.forEach((pos, i) => {
+          const alpha = (i / ball.trail.length) * 0.3;
+          const size = (i / ball.trail.length) * ball.radius * 0.8;
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(253, 224, 71, ${alpha})`;
+          ctx.fill();
+        });
+
+        // Draw lemon
+        ctx.save();
+        ctx.translate(ball.x, ball.y);
+        ctx.rotate(ball.rotation);
+        
+        if (lemonLoaded) {
+          ctx.drawImage(lemonImg, -ball.radius, -ball.radius * 0.9, ball.radius * 2, ball.radius * 1.8);
+        } else {
+          // Fallback: draw a simple lemon shape
+          ctx.beginPath();
+          ctx.ellipse(0, 0, ball.radius, ball.radius * 0.85, 0, 0, Math.PI * 2);
+          const gradient = ctx.createRadialGradient(-3, -3, 0, 0, 0, ball.radius);
+          gradient.addColorStop(0, '#fef9c3');
+          gradient.addColorStop(0.5, '#fde047');
+          gradient.addColorStop(1, '#facc15');
+          ctx.fillStyle = gradient;
+          ctx.fill();
+        }
+        
+        ctx.restore();
+        
+        // Glow effect
+        ctx.shadowColor = '#facc15';
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.radius * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(253, 224, 71, 0.1)';
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Remove landed balls
+      if (ballsToRemove.length > 0) {
+        balls = balls.filter(ball => !ballsToRemove.includes(ball.id));
+      }
+
+      // Clean up old slot hits
+      const now = Date.now();
+      Object.keys(slotHits).forEach(key => {
+        if (now - slotHits[key] >= 600) {
+          delete slotHits[key];
+        }
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    // UI Update functions
+    function updateBalance() {
+      document.getElementById('balanceValue').textContent = balance.toFixed(2);
+      document.getElementById('dropBtn').disabled = balance < betAmount;
+    }
+
+    function updateLastResult(multiplier, amount, profit) {
+      const resultBox = document.getElementById('lastResult');
+      const resultValue = document.getElementById('lastResultValue');
+      
+      resultBox.style.display = 'block';
+      resultBox.className = profit >= 0 ? 'result-box win' : 'result-box loss';
+      resultValue.className = profit >= 0 ? 'result-value win' : 'result-value loss';
+      resultValue.textContent = `${multiplier}x → ${amount.toFixed(2)} 🍋`;
+    }
+
+    function updateProfit() {
+      const profitEl = document.getElementById('profitValue');
+      profitEl.textContent = `${totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)} 🍋`;
+      profitEl.className = totalProfit >= 0 ? 'result-value win' : 'result-value loss';
+    }
+
+    function addToHistory(id, multiplier, profit) {
+      history.unshift({ id, multiplier, profit });
+      if (history.length > 20) history.pop();
+      
+      const historyList = document.getElementById('historyList');
+      const colors = getMultiplierColor(multiplier);
+      
+      if (history.length === 1) {
+        historyList.innerHTML = '';
+      }
+      
+      const item = document.createElement('div');
+      item.className = 'history-item';
+      item.innerHTML = `
+        <span class="history-mult" style="background: ${colors.bg}; color: ${colors.text}; box-shadow: 0 2px 8px ${colors.glow};">
+          ${multiplier}x
+        </span>
+        <span class="history-profit ${profit >= 0 ? 'win' : 'loss'}">
+          ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} 🍋
+        </span>
+      `;
+      
+      historyList.insertBefore(item, historyList.firstChild);
+      
+      // Remove old items
+      while (historyList.children.length > 20) {
+        historyList.removeChild(historyList.lastChild);
+      }
+    }
+
+    // Control functions
+    function dropBall() {
+      if (balance < betAmount) return;
+
+      balance -= betAmount;
+      updateBalance();
+      
+      const newBall = new Ball(
+        boardWidth / 2 + (Math.random() - 0.5) * 20,
+        20,
+        ballIdCounter++
+      );
+      balls.push(newBall);
+    }
+
+    function adjustBet(multiplier) {
+      betAmount = Math.max(1, Math.min(balance, Math.floor(betAmount * multiplier)));
+      document.getElementById('betInput').value = betAmount;
+      updateBalance();
+    }
+
+    function setBetMax() {
+      betAmount = Math.floor(balance);
+      document.getElementById('betInput').value = betAmount;
+      updateBalance();
+    }
+
+    function setRisk(newRisk) {
+      risk = newRisk;
+      
+      // Update buttons
+      ['low', 'medium', 'high'].forEach(r => {
+        const btn = document.getElementById(`risk-${r}`);
+        btn.className = r === risk ? `risk-btn active-${r}` : 'risk-btn';
+      });
+      
+      // Update badge
+      const badge = document.getElementById('riskBadge');
+      badge.textContent = `${risk.toUpperCase()} RISK`;
+      badge.className = `badge badge-${risk}`;
+    }
+
+    function setRows(value) {
+      rows = parseInt(value);
+      document.getElementById('rowsValue').textContent = rows;
+      document.getElementById('rowsBadge').textContent = `${rows} Rows`;
+      generatePegs();
+      slotHits = {};
+    }
+
+    function toggleAutoPlay() {
+      isAutoPlaying = !isAutoPlaying;
+      const btn = document.getElementById('autoBtn');
+      
+      if (isAutoPlaying) {
+        btn.textContent = '⏹ Stop Auto';
+        btn.classList.add('active');
+        autoPlayInterval = setInterval(() => {
+          if (balance >= betAmount) {
+            dropBall();
+          } else {
+            toggleAutoPlay();
+          }
+        }, 400);
+      } else {
+        btn.textContent = '▶ Auto Play';
+        btn.classList.remove('active');
+        clearInterval(autoPlayInterval);
+      }
+    }
+
+    // Event listeners
+    document.getElementById('betInput').addEventListener('change', function() {
+      betAmount = Math.max(1, Math.min(balance, parseInt(this.value) || 1));
+      this.value = betAmount;
+      updateBalance();
+    });
+
+    // Initialize
+    generatePegs();
+    updateBalance();
+    animate();
+  </script>
+</body>
+</html>
