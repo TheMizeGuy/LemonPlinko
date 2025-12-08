@@ -653,6 +653,7 @@
     let totalProfit = 0;
     let history = [];
     let ballIdCounter = 0;
+    let activeBalls = 0;
 
     const boardWidth = 750;
     const boardHeight = 620;
@@ -691,127 +692,161 @@
       </svg>
     `);
 
-    // Ball class
+    // Ball class - uses predetermined path for mathematically correct distribution
     class Ball {
-      constructor(x, y, id) {
+      constructor(x, y, id, numRows) {
         this.id = id;
+        this.startX = x;
+        this.startY = y;
         this.x = x;
         this.y = y;
-        this.vx = 0;
-        this.vy = 0;
         this.radius = 12;
-        this.gravity = 1.5;
         this.landed = false;
         this.landedSlot = null;
         this.trail = [];
         this.processed = false;
         this.rotation = 0;
         this.rotationSpeed = 0;
-        this.pegHitCount = 0;
-        this.collidedPegs = new Set();
+        
+        // Pre-calculate the path using true 50/50 random choices
+        // This guarantees Pascal's triangle distribution
+        this.path = [];
+        this.currentPathIndex = 0;
+        this.numRows = numRows;
+        
+        // Generate random path: each peg is a 50/50 left or right choice
+        let slot = 0; // Start at center (will offset later)
+        for (let i = 0; i < numRows; i++) {
+          // True 50/50 choice
+          if (Math.random() < 0.5) {
+            slot++; // Go right
+          }
+          // else stay (go left relative to peg)
+        }
+        this.finalSlot = slot; // This will be 0 to numRows, following binomial distribution
+        
+        // Calculate peg positions for animation
+        const pegSpacing = 42;
+        const startPegY = 70;
+        const endPegY = boardHeight - 100;
+        const rowSpacing = (endPegY - startPegY) / numRows;
+        
+        // Build path points through pegs
+        let currentX = x;
+        let pathSlot = 0;
+        
+        // Re-generate with same final outcome for smooth animation
+        let tempSlot = 0;
+        let choices = [];
+        for (let i = 0; i < numRows; i++) {
+          choices.push(Math.random() < 0.5);
+        }
+        
+        // Recalculate to match final slot
+        let testSlot = 0;
+        for (let i = 0; i < numRows; i++) {
+          if (choices[i]) testSlot++;
+        }
+        this.finalSlot = testSlot;
+        
+        // Now build the visual path
+        currentX = boardWidth / 2;
+        for (let row = 0; row < numRows; row++) {
+          const pegsInRow = row + 3;
+          const y = startPegY + row * rowSpacing;
+          const totalWidth = (pegsInRow - 1) * pegSpacing;
+          const rowStartX = (boardWidth - totalWidth) / 2;
+          
+          // Find which peg we're hitting based on accumulated choices
+          let leftChoices = 0;
+          for (let i = 0; i < row; i++) {
+            if (!choices[i]) leftChoices++;
+          }
+          const pegIndex = row - leftChoices + Math.floor((pegsInRow - row - 1) / 2);
+          const clampedPegIndex = Math.max(0, Math.min(pegsInRow - 1, Math.round(currentX - rowStartX) / pegSpacing));
+          
+          // Calculate target X based on choice
+          if (choices[row]) {
+            currentX += pegSpacing / 2;
+          } else {
+            currentX -= pegSpacing / 2;
+          }
+          
+          this.path.push({
+            x: currentX,
+            y: y + rowSpacing * 0.7,
+            pegY: y,
+            choice: choices[row]
+          });
+        }
+        
+        // Animation state
+        this.animProgress = 0;
+        this.animSpeed = 0.045; // Speed of animation
+        this.currentSegment = 0;
+        this.segmentProgress = 0;
       }
 
       update() {
         if (this.landed) return;
 
         this.trail.push({ x: this.x, y: this.y });
-        if (this.trail.length > 5) this.trail.shift();
-
-        // Apply gravity
-        this.vy += this.gravity;
+        if (this.trail.length > 6) this.trail.shift();
         
-        // Apply velocity
-        this.x += this.vx;
-        this.y += this.vy;
+        // Animate through path segments
+        this.segmentProgress += this.animSpeed;
         
-        // Dampen horizontal velocity slightly between pegs
-        this.vx *= 0.99;
-        
-        // Update rotation
-        this.rotation += this.rotationSpeed;
-        this.rotationSpeed *= 0.95;
-
-        // Check peg collisions
-        for (const peg of pegs) {
-          // Skip if we already collided with this peg
-          if (this.collidedPegs.has(peg)) continue;
+        if (this.segmentProgress >= 1) {
+          this.segmentProgress = 0;
+          this.currentSegment++;
           
-          const dx = this.x - peg.x;
-          const dy = this.y - peg.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          const minDist = this.radius + peg.radius;
-
-          if (distance < minDist && distance > 0) {
-            // Mark peg as collided
-            this.collidedPegs.add(peg);
-            this.pegHitCount++;
-            
-            // Separate ball from peg
-            const normalX = dx / distance;
-            const normalY = dy / distance;
-            const overlap = minDist - distance;
-            this.x += normalX * overlap * 1.5;
-            this.y += normalY * overlap * 1.5;
-            
-            // THE KEY TO CORRECT DISTRIBUTION:
-            // Each peg hit is a Bernoulli trial - 50% left, 50% right
-            // The horizontal offset must be consistent to match peg spacing
-            const pegSpacing = 42; // matches peg generation spacing
-            const horizontalShift = pegSpacing / 2; // half peg spacing per bounce
-            
-            // Pure 50/50 random choice
-            const goRight = Math.random() < 0.5;
-            
-            // Set position offset and velocity to guide ball to next row
-            if (goRight) {
-              this.vx = 3.5;
-              this.rotationSpeed = 0.15;
-            } else {
-              this.vx = -3.5;
-              this.rotationSpeed = -0.15;
+          // Trigger peg hit effect
+          if (this.currentSegment < this.path.length) {
+            const segment = this.path[this.currentSegment];
+            // Find and highlight the nearest peg
+            for (const peg of pegs) {
+              const dy = Math.abs(peg.y - segment.pegY);
+              const dx = Math.abs(peg.x - this.x);
+              if (dy < 10 && dx < 30) {
+                peg.hit = true;
+                peg.hitTime = Date.now();
+                break;
+              }
             }
-            
-            // Bounce upward slightly
-            this.vy = Math.abs(this.vy) * 0.2;
-
-            peg.hit = true;
-            peg.hitTime = Date.now();
-            
-            // Only process one peg collision per frame
-            break;
           }
         }
         
-        // Clean up old collided pegs that are far away
-        for (const peg of this.collidedPegs) {
-          const dy = this.y - peg.y;
-          if (dy > 30) {
-            this.collidedPegs.delete(peg);
-          }
-        }
-
-        // Wall collisions
-        const padding = 40;
-        if (this.x < padding + this.radius) {
-          this.x = padding + this.radius;
-          this.vx = Math.abs(this.vx) * 0.3;
-        }
-        if (this.x > boardWidth - padding - this.radius) {
-          this.x = boardWidth - padding - this.radius;
-          this.vx = -Math.abs(this.vx) * 0.3;
-        }
-
-        // Check if ball reached bottom
-        const bottomY = boardHeight - 75;
-        if (this.y >= bottomY) {
-          this.y = bottomY;
+        if (this.currentSegment >= this.path.length) {
+          // Reached the bottom
           this.landed = true;
+          this.landedSlot = this.finalSlot;
           
-          const slotsCount = rows + 1;
-          const startX = (boardWidth - slotsCount * slotWidth) / 2;
-          const slotIndex = Math.floor((this.x - startX) / slotWidth);
-          this.landedSlot = Math.max(0, Math.min(slotsCount - 1, slotIndex));
+          // Snap to final position
+          const slotsCount = this.numRows + 1;
+          const totalSlotsWidth = slotsCount * slotWidth;
+          const slotsStartX = (boardWidth - totalSlotsWidth) / 2;
+          this.x = slotsStartX + this.finalSlot * slotWidth + slotWidth / 2;
+          this.y = boardHeight - 75;
+          return;
         }
+        
+        // Interpolate position
+        const prevPoint = this.currentSegment === 0 
+          ? { x: this.startX, y: this.startY }
+          : this.path[this.currentSegment - 1];
+        const nextPoint = this.path[this.currentSegment];
+        
+        // Smooth easing
+        const t = this.segmentProgress;
+        const easeT = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        
+        this.x = prevPoint.x + (nextPoint.x - prevPoint.x) * easeT;
+        this.y = prevPoint.y + (nextPoint.y - prevPoint.y) * easeT;
+        
+        // Update rotation based on movement direction
+        const dx = nextPoint.x - prevPoint.x;
+        this.rotationSpeed = dx * 0.01;
+        this.rotation += this.rotationSpeed;
       }
     }
 
@@ -973,9 +1008,12 @@
       balls.forEach(ball => {
         if (ball.landed && ball.landedSlot !== null && !ball.processed) {
           ball.processed = true;
-          const multiplier = multipliers[ball.landedSlot];
-          const winAmount = betAmount * multiplier;
-          const profit = winAmount - betAmount;
+          
+          // Use the ball's stored settings, not current UI settings
+          const ballMultipliers = MULTIPLIERS[ball.rows][ball.risk];
+          const multiplier = ballMultipliers[ball.landedSlot];
+          const winAmount = ball.betAmount * multiplier;
+          const profit = winAmount - ball.betAmount;
           
           slotHits[ball.landedSlot] = Date.now();
           
@@ -988,6 +1026,8 @@
           addToHistory(ball.id, multiplier, profit);
           
           ballsToRemove.push(ball.id);
+          activeBalls--;
+          updateControlsState();
         }
       });
 
@@ -1114,14 +1154,24 @@
       balance -= betAmount;
       updateBalance();
       
-      // Drop from exact center with no initial horizontal velocity
-      // The 50/50 peg bounces will create the correct distribution
+      // Store current settings with the ball
+      const ballRows = rows;
+      const ballRisk = risk;
+      const ballBet = betAmount;
+      
       const newBall = new Ball(
         boardWidth / 2,
         25,
-        ballIdCounter++
+        ballIdCounter++,
+        ballRows
       );
+      newBall.betAmount = ballBet;
+      newBall.risk = ballRisk;
+      newBall.rows = ballRows;
+      
       balls.push(newBall);
+      activeBalls++;
+      updateControlsState();
     }
 
     function adjustBet(multiplier) {
@@ -1137,6 +1187,9 @@
     }
 
     function setRisk(newRisk) {
+      // Don't allow changing risk while balls are dropping
+      if (activeBalls > 0) return;
+      
       risk = newRisk;
       
       // Update buttons
@@ -1152,11 +1205,33 @@
     }
 
     function setRows(value) {
+      // Don't allow changing rows while balls are dropping
+      if (activeBalls > 0) {
+        // Reset slider to current value
+        document.getElementById('rowsSlider').value = rows;
+        return;
+      }
+      
       rows = parseInt(value);
       document.getElementById('rowsValue').textContent = rows;
       document.getElementById('rowsBadge').textContent = `${rows} Rows`;
       generatePegs();
       slotHits = {};
+    }
+    
+    // Update UI to show disabled state
+    function updateControlsState() {
+      const disabled = activeBalls > 0;
+      
+      ['low', 'medium', 'high'].forEach(r => {
+        const btn = document.getElementById(`risk-${r}`);
+        btn.style.opacity = disabled ? '0.5' : '1';
+        btn.style.cursor = disabled ? 'not-allowed' : 'pointer';
+      });
+      
+      const slider = document.getElementById('rowsSlider');
+      slider.style.opacity = disabled ? '0.5' : '1';
+      slider.style.cursor = disabled ? 'not-allowed' : 'pointer';
     }
 
     function toggleAutoPlay() {
