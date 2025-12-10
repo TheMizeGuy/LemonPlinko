@@ -130,6 +130,139 @@
       cursor: not-allowed;
     }
 
+    .side-bet-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.2s;
+    }
+
+    .side-bet-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .side-bet-row.active {
+      background: rgba(250, 204, 21, 0.1);
+      border-color: rgba(250, 204, 21, 0.3);
+    }
+
+    .side-bet-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .side-bet-check {
+      width: 18px;
+      height: 18px;
+      accent-color: #facc15;
+      cursor: pointer;
+    }
+
+    .side-bet-check:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .side-bet-label {
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+
+    .side-bet-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .side-bet-odds {
+      font-size: 11px;
+      color: #facc15;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .side-bet-input {
+      width: 70px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #fff;
+      font-size: 14px;
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+    }
+
+    .side-bet-input:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .side-bet-input:focus {
+      outline: none;
+      border-color: rgba(250, 204, 21, 0.5);
+    }
+
+    .side-bet-result {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 12px 16px;
+      border-radius: 12px;
+      z-index: 15;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .side-bet-result-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      padding: 6px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .side-bet-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .side-bet-result-name {
+      font-size: 12px;
+      color: #9ca3af;
+    }
+
+    .side-bet-result-value {
+      font-size: 14px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .side-bet-result-value.win {
+      color: #22c55e;
+    }
+
+    .side-bet-result-value.lose {
+      color: #ef4444;
+    }
+
     .btn-play {
       width: 100%;
       padding: 18px;
@@ -642,6 +775,30 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
+    .history-sidebets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .history-sidebet {
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .history-sidebet.win {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .history-sidebet.lose {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
     .section {
       margin-bottom: 20px;
     }
@@ -720,6 +877,44 @@
       font-size: 20px;
     }
 
+    .payouts-info {
+      display: flex;
+      gap: 20px;
+      margin-top: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .payouts-info-section {
+      flex: 1;
+    }
+
+    .payouts-info-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #facc15;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .payouts-info-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      padding: 4px 0;
+      color: #9ca3af;
+    }
+
+    .payouts-info-row .payout-mult {
+      color: #facc15;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
     @media (max-width: 1100px) {
       body {
         flex-direction: column;
@@ -761,6 +956,43 @@
         <button class="btn-small" id="betHalf" onclick="adjustBet(0.5)">½x</button>
         <button class="btn-small" id="betDouble" onclick="adjustBet(2)">2x</button>
         <button class="btn-small" id="betMax" onclick="setBetMax()">MAX</button>
+      </div>
+    </div>
+
+    <!-- Side Bets -->
+    <div class="section">
+      <label class="section-label">Side Bets</label>
+      
+      <div class="side-bet-row">
+        <div class="side-bet-info">
+          <input type="checkbox" id="perfectPairsCheck" class="side-bet-check" onchange="toggleSideBet('perfectPairs')">
+          <label for="perfectPairsCheck" class="side-bet-label">
+            <span class="side-bet-name">Perfect Pairs</span>
+            <span class="side-bet-odds">6x-30x</span>
+          </label>
+        </div>
+        <input type="number" id="perfectPairsBet" class="side-bet-input" value="5" min="1" disabled>
+      </div>
+
+      <div class="side-bet-row">
+        <div class="side-bet-info">
+          <input type="checkbox" id="twentyOneCheck" class="side-bet-check" onchange="toggleSideBet('twentyOne')">
+          <label for="twentyOneCheck" class="side-bet-label">
+            <span class="side-bet-name">21+3</span>
+            <span class="side-bet-odds">9x-100x</span>
+          </label>
+        </div>
+        <input type="number" id="twentyOneBet" class="side-bet-input" value="5" min="1" disabled>
+      </div>
+
+      <div class="side-bet-row">
+        <div class="side-bet-info">
+          <input type="checkbox" id="insuranceAutoCheck" class="side-bet-check" onchange="toggleSideBet('insuranceAuto')">
+          <label for="insuranceAutoCheck" class="side-bet-label">
+            <span class="side-bet-name">Auto Insurance</span>
+            <span class="side-bet-odds">2x</span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -811,6 +1043,9 @@
     </div>
 
     <div class="table-felt" id="tableFelt">
+      <!-- Side Bet Results -->
+      <div class="side-bet-result" id="sideBetResult" style="display: none;"></div>
+
       <!-- Dealer Area -->
       <div class="dealer-area">
         <div class="hand-label">Dealer</div>
@@ -861,6 +1096,30 @@
         <div class="stat-value" id="statBlackjacks" style="color: #facc15;">0</div>
       </div>
     </div>
+
+    <!-- Side Bet Payouts Info -->
+    <div class="payouts-info">
+      <div class="payouts-info-section">
+        <div class="payouts-info-title">Perfect Pairs</div>
+        <div class="payouts-info-row"><span>Perfect Pair (same suit)</span><span class="payout-mult">30x</span></div>
+        <div class="payouts-info-row"><span>Colored Pair (same color)</span><span class="payout-mult">12x</span></div>
+        <div class="payouts-info-row"><span>Mixed Pair (diff color)</span><span class="payout-mult">6x</span></div>
+      </div>
+      <div class="payouts-info-section">
+        <div class="payouts-info-title">21+3</div>
+        <div class="payouts-info-row"><span>Suited Trips</span><span class="payout-mult">100x</span></div>
+        <div class="payouts-info-row"><span>Straight Flush</span><span class="payout-mult">40x</span></div>
+        <div class="payouts-info-row"><span>Three of a Kind</span><span class="payout-mult">30x</span></div>
+        <div class="payouts-info-row"><span>Straight</span><span class="payout-mult">10x</span></div>
+        <div class="payouts-info-row"><span>Flush</span><span class="payout-mult">5x</span></div>
+      </div>
+      <div class="payouts-info-section">
+        <div class="payouts-info-title">Main Game</div>
+        <div class="payouts-info-row"><span>Blackjack</span><span class="payout-mult">3:2</span></div>
+        <div class="payouts-info-row"><span>Insurance</span><span class="payout-mult">2:1</span></div>
+        <div class="payouts-info-row"><span>Win</span><span class="payout-mult">1:1</span></div>
+      </div>
+    </div>
   </div>
 
   <!-- Right Panel - History -->
@@ -897,6 +1156,30 @@
     let stats = { hands: 0, wins: 0, losses: 0, blackjacks: 0 };
     let history = [];
     let gameIdCounter = 0;
+
+    // Side bet state
+    let sideBets = {
+      perfectPairs: { enabled: false, amount: 5 },
+      twentyOne: { enabled: false, amount: 5 },
+      insuranceAuto: { enabled: false }
+    };
+    let sideBetResults = [];
+
+    // Perfect Pairs payouts
+    const PERFECT_PAIRS_PAYOUTS = {
+      perfectPair: 30,    // Same rank, same suit
+      coloredPair: 12,    // Same rank, same color
+      mixedPair: 6        // Same rank, different color
+    };
+
+    // 21+3 payouts (player's 2 cards + dealer's up card)
+    const TWENTY_ONE_PAYOUTS = {
+      suitedTrips: 100,   // Three of same rank and suit
+      straightFlush: 40,  // Sequential same suit
+      threeOfKind: 30,    // Three of same rank
+      straight: 10,       // Sequential any suit
+      flush: 5            // Same suit
+    };
 
     // Create and shuffle deck (6 decks)
     function createDeck() {
@@ -1019,19 +1302,35 @@
     function startGame() {
       if (balance < betAmount) return;
 
+      // Calculate total needed (main bet + side bets)
+      let totalNeeded = betAmount;
+      if (sideBets.perfectPairs.enabled) {
+        totalNeeded += parseInt(document.getElementById('perfectPairsBet').value) || 5;
+      }
+      if (sideBets.twentyOne.enabled) {
+        totalNeeded += parseInt(document.getElementById('twentyOneBet').value) || 5;
+      }
+      
+      if (balance < totalNeeded) {
+        alert('Insufficient balance for all bets!');
+        return;
+      }
+
       // Reset state
       gameInProgress = true;
       playerTurn = true;
       hasDoubled = false;
       insuranceBet = 0;
       currentBet = betAmount;
+      sideBetResults = [];
       
       balance -= currentBet;
       updateBalance();
       updateBetBadge();
 
-      // Hide message
+      // Hide messages
       document.getElementById('gameMessage').style.display = 'none';
+      document.getElementById('sideBetResult').style.display = 'none';
 
       // Create new deck if needed
       if (deck.length < 52) {
@@ -1043,12 +1342,27 @@
       playerHand = [drawCard(), drawCard()];
 
       renderHands();
+      
+      // Process side bets after initial deal
+      processSideBets();
+      
       updateButtons();
 
       // Check for dealer ace (insurance)
       if (dealerHand[0].rank === 'A') {
-        document.getElementById('insurancePrompt').style.display = 'block';
-        disableAllActions();
+        if (sideBets.insuranceAuto.enabled && balance >= currentBet / 2) {
+          // Auto-take insurance
+          insuranceBet = currentBet / 2;
+          balance -= insuranceBet;
+          updateBalance();
+          checkInitialBlackjacks();
+        } else if (!sideBets.insuranceAuto.enabled) {
+          document.getElementById('insurancePrompt').style.display = 'block';
+          disableAllActions();
+          return;
+        } else {
+          checkInitialBlackjacks();
+        }
         return;
       }
 
@@ -1080,14 +1394,17 @@
         if (dealerBJ && playerBJ) {
           endGame('push', 0);
         } else if (playerBJ) {
-          const winAmount = currentBet * 2.5; // 3:2 payout
-          endGame('blackjack', winAmount - currentBet);
+          // Blackjack pays 3:2 (1.5x the bet as profit, plus original bet returned)
+          const blackjackPayout = currentBet * 1.5;
+          endGame('blackjack', blackjackPayout);
         } else {
           // Dealer blackjack
           if (insuranceBet > 0) {
             // Insurance pays 2:1
             balance += insuranceBet * 3;
+            totalProfit += insuranceBet * 2;
             updateBalance();
+            updateProfit();
           }
           endGame('lose', -currentBet);
         }
@@ -1262,13 +1579,26 @@
       const playerValue = calculateHand(playerHand);
       const dealerValue = calculateHand(dealerHand);
       
+      // Include side bet results in total
+      let totalProfit = profit;
+      let sideBetInfo = '';
+      
+      if (sideBetResults.length > 0) {
+        sideBetResults.forEach(sb => {
+          if (sb.profit > 0) {
+            sideBetInfo += ` | ${sb.name}: +${sb.profit}`;
+          }
+        });
+      }
+      
       history.unshift({
         id: gameIdCounter++,
         result,
         profit,
         playerValue,
         dealerValue,
-        bet: currentBet
+        bet: currentBet,
+        sideBets: [...sideBetResults]
       });
 
       if (history.length > 20) history.pop();
@@ -1288,16 +1618,33 @@
         resultText = 'BLACKJACK';
       }
 
+      // Calculate total profit including side bets for this hand
+      let displayProfit = profit;
+      sideBetResults.forEach(sb => {
+        displayProfit += sb.profit;
+      });
+
+      let sideBetHtml = '';
+      if (sideBetResults.length > 0) {
+        sideBetHtml = '<div class="history-sidebets">';
+        sideBetResults.forEach(sb => {
+          const sbClass = sb.profit > 0 ? 'win' : 'lose';
+          sideBetHtml += `<span class="history-sidebet ${sbClass}">${sb.name}: ${sb.profit > 0 ? '+' : ''}${sb.profit.toFixed(0)}</span>`;
+        });
+        sideBetHtml += '</div>';
+      }
+
       item.innerHTML = `
         <div class="history-item-header">
           <span class="history-result ${resultClass}">${resultText}</span>
-          <span class="history-profit ${profit >= 0 ? 'win' : 'loss'}">
-            ${profit >= 0 ? '+' : ''}${profit.toFixed(2)} 🍋
+          <span class="history-profit ${displayProfit >= 0 ? 'win' : 'loss'}">
+            ${displayProfit >= 0 ? '+' : ''}${displayProfit.toFixed(2)} 🍋
           </span>
         </div>
         <div class="history-hands">
           Player: ${playerValue} vs Dealer: ${dealerValue}
         </div>
+        ${sideBetHtml}
       `;
 
       historyList.insertBefore(item, historyList.firstChild);
@@ -1325,6 +1672,7 @@
         splitBtn.disabled = true; // Simplified - no split
         betInput.disabled = true;
         betBtns.forEach(id => document.getElementById(id).disabled = true);
+        updateSideBetControls(true);
       } else {
         dealBtn.disabled = balance < betAmount;
         hitBtn.disabled = true;
@@ -1333,6 +1681,7 @@
         splitBtn.disabled = true;
         betInput.disabled = false;
         betBtns.forEach(id => document.getElementById(id).disabled = false);
+        updateSideBetControls(false);
       }
     }
 
@@ -1388,6 +1737,210 @@
 
     function sleep(ms) {
       return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Toggle side bet
+    function toggleSideBet(betType) {
+      if (gameInProgress) return;
+      
+      const checkbox = document.getElementById(`${betType}Check`);
+      const input = document.getElementById(`${betType}Bet`);
+      const row = checkbox.closest('.side-bet-row');
+      
+      sideBets[betType].enabled = checkbox.checked;
+      
+      if (input) {
+        input.disabled = !checkbox.checked;
+      }
+      
+      if (checkbox.checked) {
+        row.classList.add('active');
+      } else {
+        row.classList.remove('active');
+      }
+      
+      updateButtons();
+    }
+
+    // Get card rank value for straights (A=1 or 14)
+    function getRankValue(rank) {
+      const values = { 'A': 14, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 11, 'Q': 12, 'K': 13 };
+      return values[rank];
+    }
+
+    // Check if three cards form a straight
+    function isStraight(cards) {
+      const values = cards.map(c => getRankValue(c.rank)).sort((a, b) => a - b);
+      // Check normal straight
+      if (values[2] - values[1] === 1 && values[1] - values[0] === 1) return true;
+      // Check A-2-3 straight
+      if (values[0] === 2 && values[1] === 3 && values[2] === 14) return true;
+      // Check Q-K-A straight
+      if (values[0] === 12 && values[1] === 13 && values[2] === 14) return true;
+      return false;
+    }
+
+    // Evaluate Perfect Pairs side bet
+    function evaluatePerfectPairs() {
+      if (!sideBets.perfectPairs.enabled) return null;
+      
+      const card1 = playerHand[0];
+      const card2 = playerHand[1];
+      const betAmt = parseInt(document.getElementById('perfectPairsBet').value) || 5;
+      
+      if (card1.rank !== card2.rank) {
+        return { name: 'Perfect Pairs', result: 'No Pair', payout: 0, bet: betAmt, profit: -betAmt };
+      }
+      
+      // Same rank - check type of pair
+      if (card1.suit === card2.suit) {
+        // Perfect pair (same suit)
+        const win = betAmt * PERFECT_PAIRS_PAYOUTS.perfectPair;
+        return { name: 'Perfect Pairs', result: 'Perfect Pair!', payout: PERFECT_PAIRS_PAYOUTS.perfectPair, bet: betAmt, profit: win };
+      }
+      
+      const isRed1 = card1.suit === '♥' || card1.suit === '♦';
+      const isRed2 = card2.suit === '♥' || card2.suit === '♦';
+      
+      if (isRed1 === isRed2) {
+        // Colored pair (same color)
+        const win = betAmt * PERFECT_PAIRS_PAYOUTS.coloredPair;
+        return { name: 'Perfect Pairs', result: 'Colored Pair!', payout: PERFECT_PAIRS_PAYOUTS.coloredPair, bet: betAmt, profit: win };
+      }
+      
+      // Mixed pair (different color)
+      const win = betAmt * PERFECT_PAIRS_PAYOUTS.mixedPair;
+      return { name: 'Perfect Pairs', result: 'Mixed Pair!', payout: PERFECT_PAIRS_PAYOUTS.mixedPair, bet: betAmt, profit: win };
+    }
+
+    // Evaluate 21+3 side bet
+    function evaluateTwentyOnePlus3() {
+      if (!sideBets.twentyOne.enabled) return null;
+      
+      const cards = [playerHand[0], playerHand[1], dealerHand[0]];
+      const betAmt = parseInt(document.getElementById('twentyOneBet').value) || 5;
+      
+      const suits = cards.map(c => c.suit);
+      const ranks = cards.map(c => c.rank);
+      
+      const allSameSuit = suits[0] === suits[1] && suits[1] === suits[2];
+      const allSameRank = ranks[0] === ranks[1] && ranks[1] === ranks[2];
+      const straight = isStraight(cards);
+      
+      // Suited trips (three of a kind, same suit)
+      if (allSameRank && allSameSuit) {
+        const win = betAmt * TWENTY_ONE_PAYOUTS.suitedTrips;
+        return { name: '21+3', result: 'Suited Trips!', payout: TWENTY_ONE_PAYOUTS.suitedTrips, bet: betAmt, profit: win };
+      }
+      
+      // Straight flush
+      if (straight && allSameSuit) {
+        const win = betAmt * TWENTY_ONE_PAYOUTS.straightFlush;
+        return { name: '21+3', result: 'Straight Flush!', payout: TWENTY_ONE_PAYOUTS.straightFlush, bet: betAmt, profit: win };
+      }
+      
+      // Three of a kind
+      if (allSameRank) {
+        const win = betAmt * TWENTY_ONE_PAYOUTS.threeOfKind;
+        return { name: '21+3', result: 'Three of a Kind!', payout: TWENTY_ONE_PAYOUTS.threeOfKind, bet: betAmt, profit: win };
+      }
+      
+      // Straight
+      if (straight) {
+        const win = betAmt * TWENTY_ONE_PAYOUTS.straight;
+        return { name: '21+3', result: 'Straight!', payout: TWENTY_ONE_PAYOUTS.straight, bet: betAmt, profit: win };
+      }
+      
+      // Flush
+      if (allSameSuit) {
+        const win = betAmt * TWENTY_ONE_PAYOUTS.flush;
+        return { name: '21+3', result: 'Flush!', payout: TWENTY_ONE_PAYOUTS.flush, bet: betAmt, profit: win };
+      }
+      
+      return { name: '21+3', result: 'No Hand', payout: 0, bet: betAmt, profit: -betAmt };
+    }
+
+    // Process side bets
+    function processSideBets() {
+      sideBetResults = [];
+      let totalSideBetCost = 0;
+      
+      // Deduct side bet amounts
+      if (sideBets.perfectPairs.enabled) {
+        const amt = parseInt(document.getElementById('perfectPairsBet').value) || 5;
+        totalSideBetCost += amt;
+      }
+      if (sideBets.twentyOne.enabled) {
+        const amt = parseInt(document.getElementById('twentyOneBet').value) || 5;
+        totalSideBetCost += amt;
+      }
+      
+      balance -= totalSideBetCost;
+      updateBalance();
+      
+      // Evaluate side bets
+      const ppResult = evaluatePerfectPairs();
+      if (ppResult) sideBetResults.push(ppResult);
+      
+      const t21Result = evaluateTwentyOnePlus3();
+      if (t21Result) sideBetResults.push(t21Result);
+      
+      // Apply winnings immediately for side bets
+      sideBetResults.forEach(result => {
+        if (result.profit > 0) {
+          balance += result.profit + result.bet; // Return bet + winnings
+          totalProfit += result.profit;
+        } else {
+          totalProfit += result.profit;
+        }
+      });
+      
+      updateBalance();
+      updateProfit();
+      displaySideBetResults();
+    }
+
+    // Display side bet results
+    function displaySideBetResults() {
+      if (sideBetResults.length === 0) {
+        document.getElementById('sideBetResult').style.display = 'none';
+        return;
+      }
+      
+      const container = document.getElementById('sideBetResult');
+      let html = '';
+      
+      sideBetResults.forEach(result => {
+        const isWin = result.profit > 0;
+        html += `
+          <div class="side-bet-result-item">
+            <span class="side-bet-result-name">${result.name}: ${result.result}</span>
+            <span class="side-bet-result-value ${isWin ? 'win' : 'lose'}">
+              ${isWin ? '+' : ''}${result.profit.toFixed(2)} 🍋
+            </span>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+      container.style.display = 'block';
+    }
+
+    // Update side bet controls state
+    function updateSideBetControls(disabled) {
+      ['perfectPairsCheck', 'twentyOneCheck', 'insuranceAutoCheck'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.disabled = disabled;
+      });
+      
+      ['perfectPairsBet', 'twentyOneBet'].forEach(id => {
+        const el = document.getElementById(id);
+        const checkId = id.replace('Bet', 'Check');
+        const checkbox = document.getElementById(checkId);
+        if (el && checkbox) {
+          el.disabled = disabled || !checkbox.checked;
+        }
+      });
     }
 
     // Event listeners
